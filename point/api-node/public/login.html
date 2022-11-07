@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styleLogin_Cadastro.css">
+    <title>Login | Point</title>
+</head>
+
+<body class="body_login">
+    <div id="Login" class="container">
+        <div class="login">
+
+
+            <div class="banner_login">
+                <a href="index.html">
+                    <img src="assets/imgs/arrow.png" alt="Voltar para a HOME" class="icon">
+
+                </a>
+
+                <img src="assets/imgs/Point.png" alt="Point Logo" class="img_login">
+
+                <div class="inputs">
+                    <span class="span_text">Email</span> <br>
+                    <input class="input" type="email" id="email_input" placeholder="seuemail@email.com" onkeypress="key()" value="brandao@point.com">
+                </div>
+
+                <div class="inputs">
+                    <span class="span_text">Senha</span> <br>
+                    <input class="input" type="password" id="senha_input" placeholder="********" onkeypress="key()" value="123456">
+                    <small>Esqueceu sua senha?</small>
+                </div>
+
+                <div class="botao_login">
+                    <button class="btnEntrar custom-btn" onclick="entrar()">Entrar</button>
+                </div>
+
+                <p class="alerta" id="alerta"></p>
+
+                <div class="sem_cadastro">
+                    <span class="span_text_scad">Não possui cadastro?</span> <a href="cadastro.html">Clique aqui.</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+
+function key(){
+        if(event.key === 'Enter'){
+            return entrar()
+        }
+    }
+
+    function mostrarAlerta(msg) {
+
+        alerta.innerHTML = msg;
+        alerta.style.visibility = "visible";
+
+        setTimeout(()=>{
+
+            alerta.style.visibility = "hidden";
+
+        }, 5000)
+
+    }
+
+    function entrar() {
+        var emailVar = email_input.value;
+        var senhaVar = senha_input.value;
+        if (emailVar == "" || senhaVar == "") {
+            mostrarAlerta("Preencha todos os campos para prosseguir!")
+
+            finalizarAguardar();
+            return false;
+        }
+
+        if (emailVar.indexOf("@") == -1) {
+            mostrarAlerta("E-mail inválido! Verifique e tente novamente.")
+
+            finalizarAguardar();
+            return false;
+        }
+
+        console.log("FORM LOGIN: ", emailVar);
+        console.log("FORM SENHA: ", senhaVar);
+
+        fetch("/usuarios/autenticar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                emailServer: emailVar,
+                senhaServer: senhaVar
+            })
+        }).then(function (resposta) {
+            console.log("ESTOU NO THEN DO entrar()!")
+
+            if (resposta.ok) {
+                console.log(resposta);
+
+                resposta.json().then(json => {
+                    console.log(json);
+                    console.log(JSON.stringify(json));
+
+                    sessionStorage.EMAIL_USUARIO = json.email;
+                    sessionStorage.NOME_USUARIO = json.nome;
+                    sessionStorage.ID_USUARIO = json.idFuncionario;
+                    sessionStorage.CARGO = json.cargo;
+                    sessionStorage.ID_EMPRESA = json.fkEmpresa;
+                    sessionStorage.SENHA_USUARIO = json.senha;
+
+                    setTimeout(function () {
+                        window.location = "dashboard/cadastrar-funcionario.html";
+                    }, 500); // apenas para exibir o loading
+
+                });
+
+            } else {
+
+                console.log("Houve um erro ao tentar realizar o login!");
+                mostrarAlerta("O e-mail e a senha não coincidem!")
+                resposta.text().then(texto => {
+                    console.error(texto);
+                    finalizarAguardar(texto);
+                });
+            }
+
+        }).catch(function (erro) {
+            console.log(erro);
+        })
+
+        return false;
+    }
+
+</script>
